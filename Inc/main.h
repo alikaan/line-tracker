@@ -73,8 +73,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define GREEN_LED_Pin LL_GPIO_PIN_13
-#define GREEN_LED_GPIO_Port GPIOC
+#define LED_GREEN_Pin LL_GPIO_PIN_13
+#define LED_GREEN_GPIO_Port GPIOC
 #define QTR_1_Pin LL_GPIO_PIN_0
 #define QTR_1_GPIO_Port GPIOB
 #define QTR_2_Pin LL_GPIO_PIN_1
@@ -95,6 +95,10 @@ void Error_Handler(void);
 #define BL_TX_GPIO_Port GPIOA
 #define BL_RX_Pin LL_GPIO_PIN_10
 #define BL_RX_GPIO_Port GPIOA
+#define MOTOR_RIGHT_Pin LL_GPIO_PIN_11
+#define MOTOR_RIGHT_GPIO_Port GPIOA
+#define MOTOR_LEFT_Pin LL_GPIO_PIN_12
+#define MOTOR_LEFT_GPIO_Port GPIOA
 #ifndef NVIC_PRIORITYGROUP_0
 #define NVIC_PRIORITYGROUP_0         ((uint32_t)0x00000007) /*!< 0 bit  for pre-emption priority,
                                                                  4 bits for subpriority */

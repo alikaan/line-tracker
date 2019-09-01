@@ -114,7 +114,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  LL_GPIO_TogglePin(GREEN_LED_GPIO_Port,GREEN_LED_Pin);
+	  LL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
 	  LL_mDelay(1000);
   }
   /* USER CODE END 3 */
