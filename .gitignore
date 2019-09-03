@@ -1,6 +1,6 @@
 *.tmp
 *.bak
-*.ld
+#.ld
 *.o
 *.su
 *.launch
