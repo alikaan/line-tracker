@@ -1,5 +1,11 @@
 #include "QTRSensors.h"
+#if defined ARDUINO
 #include <Arduino.h>
+#else
+#include "hw_layer.h"
+#endif
+
+
 
 void QTRSensors::setTypeRC()
 {
@@ -18,8 +24,10 @@ void QTRSensors::setSensorPins(const uint8_t * pins, uint8_t sensorCount)
   if (sensorCount > QTRMaxSensors) { sensorCount = QTRMaxSensors; }
 
   // (Re)allocate and initialize the array if necessary.
-  uint8_t * oldSensorPins = _sensorPins;
+  uint32_t * oldSensorPins = _sensorPins;
+  void * oldSensorPort = _sensorPort;
   _sensorPins = (uint8_t *)realloc(_sensorPins, sizeof(uint8_t) * sensorCount);
+  _sensorPorts = (uint8_t *)realloc(_sensorPorts, sizeof(uint8_t) * sensorCount);
   if (_sensorPins == nullptr)
   {
     // Memory allocation failed; don't continue.
@@ -53,24 +61,33 @@ void QTRSensors::setSamplesPerSensor(uint8_t samples)
   _samplesPerSensor = samples;
 }
 
-void QTRSensors::setEmitterPin(uint8_t emitterPin)
+void QTRSensors::setEmitterPin(void * port, uint32_t emitterPin)
 {
   releaseEmitterPins();
 
   _oddEmitterPin = emitterPin;
+#if defined ARDUINO
   pinMode(_oddEmitterPin, OUTPUT);
+#else
+  setGpioOutputMode(port, _oddEmitterPin);
+#endif
 
   _emitterPinCount = 1;
 }
 
-void QTRSensors::setEmitterPins(uint8_t oddEmitterPin, uint8_t evenEmitterPin)
+void QTRSensors::setEmitterPins(void *oddEmitterPort , uint32_t oddEmitterPin, void *evenEmitterPort, uint32_t evenEmitterPin)
 {
   releaseEmitterPins();
 
   _oddEmitterPin = oddEmitterPin;
   _evenEmitterPin = evenEmitterPin;
+#if defined ARDUINO
   pinMode(_oddEmitterPin, OUTPUT);
   pinMode(_evenEmitterPin, OUTPUT);
+#else
+  setGpioOutputMode(oddEmitterPort, oddEmitterPin);
+  setGpioOutputMode(evenEmitterPort, evenEmitterPin);
+#endif
 
   _emitterPinCount = 2;
 }
@@ -79,13 +96,22 @@ void QTRSensors::releaseEmitterPins()
 {
   if (_oddEmitterPin != QTRNoEmitterPin)
   {
-    pinMode(_oddEmitterPin, INPUT);
+#if defined ARDUINO
+	  pinMode(_oddEmitterPin, INPUT);
+#else
+	  setGpioInputMode(_oddEmitterPort, _oddEmitterPin);
+#endif
+
     _oddEmitterPin = QTRNoEmitterPin;
   }
 
   if (_evenEmitterPin != QTRNoEmitterPin)
   {
+#if defined ARDUINO
     pinMode(_evenEmitterPin, INPUT);
+#else
+    setGpioInputMode(_evenEmitterPort, _evenEmitterPin);
+#endif
     _evenEmitterPin = QTRNoEmitterPin;
   }
 

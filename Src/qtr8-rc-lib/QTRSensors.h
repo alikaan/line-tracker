@@ -561,15 +561,21 @@ class QTRSensors
 
     QTRType _type = QTRType::Undefined;
 
-    uint8_t * _sensorPins = nullptr;
+    uint32_t * _sensorPins = nullptr;
+    void * _sensorPorts = nullptr;
+
     uint8_t _sensorCount = 0;
 
     uint16_t _timeout = QTRRCDefaultTimeout; // only used for RC sensors
     uint16_t _maxValue = QTRRCDefaultTimeout; // the maximum value returned by readPrivate()
     uint8_t _samplesPerSensor = 4; // only used for analog sensors
 
-    uint8_t _oddEmitterPin = QTRNoEmitterPin; // also used for single emitter pin
-    uint8_t _evenEmitterPin = QTRNoEmitterPin;
+    uint32_t _oddEmitterPin = QTRNoEmitterPin; // also used for single emitter pin
+    uint32_t _evenEmitterPin = QTRNoEmitterPin;
+
+    void *_oddEmitterPort;
+    void *_evenEmitterPort;
+
     uint8_t _emitterPinCount = 0;
 
     bool _dimmable = true;
