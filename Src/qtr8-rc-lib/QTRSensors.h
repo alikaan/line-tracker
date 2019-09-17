@@ -549,7 +549,7 @@ class QTRSensors
 
   private:
 
-    uint16_t emittersOnWithPin(uint8_t pin);
+    uint16_t emittersOnWithPin(void * port, uint32_t pin);
 
     // Handles the actual calibration, including (re)allocating and
     // initializing the storage for the calibration values if necessary.

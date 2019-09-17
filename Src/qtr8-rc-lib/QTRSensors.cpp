@@ -140,7 +140,11 @@ void QTRSensors::emittersOff(QTREmitters emitters, bool wait)
     if ((_oddEmitterPin != QTRNoEmitterPin) &&
         (digitalRead(_oddEmitterPin) == HIGH))
     {
+#if defined ARDUINO
       digitalWrite(_oddEmitterPin, LOW);
+#else
+      resetGpio(_oddEmitterPort, _oddEmitterPin);
+#endif
       pinChanged = true;
     }
   }
@@ -155,7 +159,11 @@ void QTRSensors::emittersOff(QTREmitters emitters, bool wait)
     if ((_evenEmitterPin != QTRNoEmitterPin) &&
         (digitalRead(_evenEmitterPin) == HIGH))
     {
+#if defined ARDUINO
       digitalWrite(_evenEmitterPin, LOW);
+#else
+      resetGpio(_evenEmitterPort, _evenEmitterPin);
+#endif
       pinChanged = true;
     }
   }
@@ -237,7 +245,7 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
 
 // assumes pin is valid (not QTRNoEmitterPin)
 // returns time when pin was first set high (used by emittersSelect())
-uint16_t QTRSensors::emittersOnWithPin(uint8_t pin)
+uint16_t QTRSensors::emittersOnWithPin(void *port, uint32_t pin)
 {
   if (_dimmable && (digitalRead(pin) == HIGH))
   {
@@ -245,11 +253,19 @@ uint16_t QTRSensors::emittersOnWithPin(uint8_t pin)
     // up the dimming level, we have to turn the emitters off and back on. This
     // means the turn-off delay will happen even if wait = false was passed to
     // emittersOn(). (Driver min is 1 ms.)
+#if defined ARDUINO
     digitalWrite(pin, LOW);
+#else
+    resetGpio(port, pin);
+#endif
     delayMicroseconds(1200);
   }
 
+#if defined ARDUINO
   digitalWrite(pin, HIGH);
+#else
+  setGpio(port, pin);
+#endif
   uint16_t emittersOnStart = micros();
 
   if (_dimmable && (_dimmingLevel > 0))
@@ -259,9 +275,17 @@ uint16_t QTRSensors::emittersOnWithPin(uint8_t pin)
     for (uint8_t i = 0; i < _dimmingLevel; i++)
     {
       delayMicroseconds(1);
+#ifdef ARDUINO
       digitalWrite(pin, LOW);
+#else
+      resetGpio(port, pin);
+#endif
       delayMicroseconds(1);
+#ifdef ARDUINO
       digitalWrite(pin, HIGH);
+#else
+      setGpio(port, pin);
+#endif
     }
 
     interrupts();
@@ -591,9 +615,17 @@ void QTRSensors::readPrivate(uint16_t * sensorValues, uint8_t start, uint8_t ste
       {
         sensorValues[i] = _maxValue;
         // make sensor line an output (drives low briefly, but doesn't matter)
+#if defined ARDUINO
         pinMode(_sensorPins[i], OUTPUT);
+#else
+        setGpioOutputMode(_sensorPorts[i],_sensorPins[i]);
+#endif
         // drive sensor line high
+#if defined ARDUINO
         digitalWrite(_sensorPins[i], HIGH);
+#else
+        setGpio(_sensorPorts[i], _sensorPins[i]);
+#endif
       }
 
       delayMicroseconds(10); // charge lines for 10 us
@@ -612,7 +644,11 @@ void QTRSensors::readPrivate(uint16_t * sensorValues, uint8_t start, uint8_t ste
         for (uint8_t i = start; i < _sensorCount; i += step)
         {
           // make sensor line an input (should also ensure pull-up is disabled)
-          pinMode(_sensorPins[i], INPUT);
+#if defined ARDUINO
+        	pinMode(_sensorPins[i], INPUT);
+#else
+        	setGpioInputMode(_sensorPorts[i],_sensorPins[i]);
+#endif
         }
 
         interrupts(); // re-enable
