@@ -2,7 +2,9 @@
 #if defined ARDUINO
 #include <Arduino.h>
 #else
+extern "C"{
 #include "hw_layer.h"
+}
 #endif
 
 
@@ -173,11 +175,19 @@ void QTRSensors::emittersOff(QTREmitters emitters, bool wait)
     if (_dimmable)
     {
       // driver min is 1 ms
+#if defined ARDUINO
       delayMicroseconds(1200);
+#else
+      delay_us(1200);
+#endif
     }
     else
     {
+#if defined ARDUINO
       delayMicroseconds(200);
+#else
+      delay_us(200);
+#endif
     }
   }
 }
@@ -233,12 +243,20 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
       // already passed while we set the dimming level.
       while ((uint16_t)(micros() - emittersOnStart) < 300)
       {
+#if defined ARDUINO
         delayMicroseconds(10);
+#else
+        delay_us(10);
+#endif
       }
     }
     else
     {
+#if defined ARDUINO
       delayMicroseconds(200);
+#else
+      delay_us(200);
+#endif
     }
   }
 }
@@ -255,10 +273,11 @@ uint16_t QTRSensors::emittersOnWithPin(void *port, uint32_t pin)
     // emittersOn(). (Driver min is 1 ms.)
 #if defined ARDUINO
     digitalWrite(pin, LOW);
+    delayMicroseconds(1200);
 #else
     resetGpio(port, pin);
+    delay_us(1200);
 #endif
-    delayMicroseconds(1200);
   }
 
 #if defined ARDUINO
@@ -277,10 +296,12 @@ uint16_t QTRSensors::emittersOnWithPin(void *port, uint32_t pin)
       delayMicroseconds(1);
 #ifdef ARDUINO
       digitalWrite(pin, LOW);
+      delayMicroseconds(1);
 #else
       resetGpio(port, pin);
+      delay_us(1);
 #endif
-      delayMicroseconds(1);
+
 #ifdef ARDUINO
       digitalWrite(pin, HIGH);
 #else

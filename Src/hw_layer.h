@@ -8,6 +8,8 @@
 #ifndef HW_LAYER_H_
 #define HW_LAYER_H_
 
+#include "dwt_stm32_delay.h"
+
 /*in order to set gpio as input, output mode */
 void setGpioOutputMode(void *port, uint32_t pin);
 void setGpioInputMode(void *port, uint32_t pin);
