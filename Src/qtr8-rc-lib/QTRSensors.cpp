@@ -356,7 +356,11 @@ void QTRSensors::emittersSelect(QTREmitters emitters)
     // the on-emitters to turn on.
     while ((uint16_t)(micros() - turnOffStart) < 1200)
     {
+#if defined ARDUINO
       delayMicroseconds(10);
+#else
+      delay_us(10);
+#endif
     }
   }
 }
@@ -635,21 +639,23 @@ void QTRSensors::readPrivate(uint16_t * sensorValues, uint8_t start, uint8_t ste
       for (uint8_t i = start; i < _sensorCount; i += step)
       {
         sensorValues[i] = _maxValue;
+#if defined ARDUINO
         // make sensor line an output (drives low briefly, but doesn't matter)
-#if defined ARDUINO
         pinMode(_sensorPins[i], OUTPUT);
-#else
-        setGpioOutputMode(_sensorPorts[i],_sensorPins[i]);
-#endif
         // drive sensor line high
-#if defined ARDUINO
         digitalWrite(_sensorPins[i], HIGH);
 #else
+        // make sensor line an output (drives low briefly, but doesn't matter)
+        setGpioOutputMode(_sensorPorts[i],_sensorPins[i]);
+        // drive sensor line high
         setGpio(_sensorPorts[i], _sensorPins[i]);
 #endif
       }
-
+#if defined ARDUINO
       delayMicroseconds(10); // charge lines for 10 us
+#else
+      delay_us(10);	// charge lines for 10 us
+#endif
 
       {
         // disable interrupts so we can switch all the pins as close to the same
