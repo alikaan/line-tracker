@@ -10,6 +10,9 @@
 
 #include "dwt_stm32_delay.h"
 
+#define HIGH 	1
+#define LOW		0
+
 /*in order to set gpio as input, output mode */
 void setGpioOutputMode(void *port, uint32_t pin);
 void setGpioInputMode(void *port, uint32_t pin);

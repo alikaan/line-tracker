@@ -117,6 +117,8 @@ int main(void)
 	  LL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
 	  LL_mDelay(1000);
 	  DWT_Delay_us(10);
+	  __disable_irq();
+	  __enable_irq();
   }
   /* USER CODE END 3 */
 }

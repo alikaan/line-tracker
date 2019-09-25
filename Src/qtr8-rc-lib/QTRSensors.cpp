@@ -1,13 +1,8 @@
 #include "QTRSensors.h"
-#if defined ARDUINO
-#include <Arduino.h>
-#else
 extern "C"{
 #include "hw_layer.h"
+#include "main.h"
 }
-#endif
-
-
 
 void QTRSensors::setTypeRC()
 {
@@ -68,11 +63,7 @@ void QTRSensors::setEmitterPin(void * port, uint32_t emitterPin)
   releaseEmitterPins();
 
   _oddEmitterPin = emitterPin;
-#if defined ARDUINO
-  pinMode(_oddEmitterPin, OUTPUT);
-#else
   setGpioOutputMode(port, _oddEmitterPin);
-#endif
 
   _emitterPinCount = 1;
 }
@@ -83,13 +74,8 @@ void QTRSensors::setEmitterPins(void *oddEmitterPort , uint32_t oddEmitterPin, v
 
   _oddEmitterPin = oddEmitterPin;
   _evenEmitterPin = evenEmitterPin;
-#if defined ARDUINO
-  pinMode(_oddEmitterPin, OUTPUT);
-  pinMode(_evenEmitterPin, OUTPUT);
-#else
   setGpioOutputMode(oddEmitterPort, oddEmitterPin);
   setGpioOutputMode(evenEmitterPort, evenEmitterPin);
-#endif
 
   _emitterPinCount = 2;
 }
@@ -98,22 +84,14 @@ void QTRSensors::releaseEmitterPins()
 {
   if (_oddEmitterPin != QTRNoEmitterPin)
   {
-#if defined ARDUINO
-	  pinMode(_oddEmitterPin, INPUT);
-#else
 	  setGpioInputMode(_oddEmitterPort, _oddEmitterPin);
-#endif
 
     _oddEmitterPin = QTRNoEmitterPin;
   }
 
   if (_evenEmitterPin != QTRNoEmitterPin)
   {
-#if defined ARDUINO
-    pinMode(_evenEmitterPin, INPUT);
-#else
     setGpioInputMode(_evenEmitterPort, _evenEmitterPin);
-#endif
     _evenEmitterPin = QTRNoEmitterPin;
   }
 
@@ -140,13 +118,9 @@ void QTRSensors::emittersOff(QTREmitters emitters, bool wait)
   {
     // Check if pin is defined and only turn off if not already off
     if ((_oddEmitterPin != QTRNoEmitterPin) &&
-        (digitalRead(_oddEmitterPin) == HIGH))
+		(getGpio(_oddEmitterPort, _oddEmitterPin) == HIGH))
     {
-#if defined ARDUINO
-      digitalWrite(_oddEmitterPin, LOW);
-#else
       resetGpio(_oddEmitterPort, _oddEmitterPin);
-#endif
       pinChanged = true;
     }
   }
@@ -159,13 +133,9 @@ void QTRSensors::emittersOff(QTREmitters emitters, bool wait)
   {
     // Check if pin is defined and only turn off if not already off
     if ((_evenEmitterPin != QTRNoEmitterPin) &&
-        (digitalRead(_evenEmitterPin) == HIGH))
+		(getGpio(_evenEmitterPort, _evenEmitterPin) == HIGH))
     {
-#if defined ARDUINO
-      digitalWrite(_evenEmitterPin, LOW);
-#else
       resetGpio(_evenEmitterPort, _evenEmitterPin);
-#endif
       pinChanged = true;
     }
   }
@@ -175,19 +145,11 @@ void QTRSensors::emittersOff(QTREmitters emitters, bool wait)
     if (_dimmable)
     {
       // driver min is 1 ms
-#if defined ARDUINO
-      delayMicroseconds(1200);
-#else
       delay_us(1200);
-#endif
     }
     else
     {
-#if defined ARDUINO
-      delayMicroseconds(200);
-#else
       delay_us(200);
-#endif
     }
   }
 }
@@ -209,7 +171,7 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
     // we might be changing the dimming level (emittersOnWithPin() should take
     // care of this)
     if ((_oddEmitterPin != QTRNoEmitterPin) &&
-        ( _dimmable || (digitalRead(_oddEmitterPin) == LOW)))
+        ( _dimmable || (getGpio(_oddEmitterPort, _oddEmitterPin) == LOW)))
     {
       emittersOnStart = emittersOnWithPin(_oddEmitterPin);
       pinChanged = true;
@@ -227,7 +189,7 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
     // we might be changing the dimming level (emittersOnWithPin() should take
     // care of this)
     if ((_evenEmitterPin != QTRNoEmitterPin) &&
-        (_dimmable || (digitalRead(_evenEmitterPin) == LOW)))
+        (_dimmable || (getGpio(_evenEmitterPort, _evenEmitterPin) == LOW)))
     {
       emittersOnStart = emittersOnWithPin(_evenEmitterPin);
       pinChanged = true;
@@ -243,20 +205,12 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
       // already passed while we set the dimming level.
       while ((uint16_t)(micros() - emittersOnStart) < 300)
       {
-#if defined ARDUINO
-        delayMicroseconds(10);
-#else
         delay_us(10);
-#endif
       }
     }
     else
     {
-#if defined ARDUINO
-      delayMicroseconds(200);
-#else
       delay_us(200);
-#endif
     }
   }
 }
@@ -265,51 +219,32 @@ void QTRSensors::emittersOn(QTREmitters emitters, bool wait)
 // returns time when pin was first set high (used by emittersSelect())
 uint16_t QTRSensors::emittersOnWithPin(void *port, uint32_t pin)
 {
-  if (_dimmable && (digitalRead(pin) == HIGH))
+  if (_dimmable && (getGpio(port, pin) == HIGH))
   {
     // We are turning on dimmable emitters that are already on. To avoid messing
     // up the dimming level, we have to turn the emitters off and back on. This
     // means the turn-off delay will happen even if wait = false was passed to
     // emittersOn(). (Driver min is 1 ms.)
-#if defined ARDUINO
-    digitalWrite(pin, LOW);
-    delayMicroseconds(1200);
-#else
     resetGpio(port, pin);
     delay_us(1200);
-#endif
   }
 
-#if defined ARDUINO
-  digitalWrite(pin, HIGH);
-#else
   setGpio(port, pin);
-#endif
   uint16_t emittersOnStart = micros();
 
   if (_dimmable && (_dimmingLevel > 0))
   {
-    noInterrupts();
+    __disable_irq();
 
     for (uint8_t i = 0; i < _dimmingLevel; i++)
     {
-      delayMicroseconds(1);
-#ifdef ARDUINO
-      digitalWrite(pin, LOW);
-      delayMicroseconds(1);
-#else
+      delay_us(1);
       resetGpio(port, pin);
       delay_us(1);
-#endif
-
-#ifdef ARDUINO
-      digitalWrite(pin, HIGH);
-#else
       setGpio(port, pin);
-#endif
     }
 
-    interrupts();
+    __enable_irq();
   }
 
   return emittersOnStart;
@@ -356,11 +291,7 @@ void QTRSensors::emittersSelect(QTREmitters emitters)
     // the on-emitters to turn on.
     while ((uint16_t)(micros() - turnOffStart) < 1200)
     {
-#if defined ARDUINO
-      delayMicroseconds(10);
-#else
       delay_us(10);
-#endif
     }
   }
 }
@@ -639,28 +570,17 @@ void QTRSensors::readPrivate(uint16_t * sensorValues, uint8_t start, uint8_t ste
       for (uint8_t i = start; i < _sensorCount; i += step)
       {
         sensorValues[i] = _maxValue;
-#if defined ARDUINO
-        // make sensor line an output (drives low briefly, but doesn't matter)
-        pinMode(_sensorPins[i], OUTPUT);
-        // drive sensor line high
-        digitalWrite(_sensorPins[i], HIGH);
-#else
         // make sensor line an output (drives low briefly, but doesn't matter)
         setGpioOutputMode(_sensorPorts[i],_sensorPins[i]);
         // drive sensor line high
         setGpio(_sensorPorts[i], _sensorPins[i]);
-#endif
       }
-#if defined ARDUINO
-      delayMicroseconds(10); // charge lines for 10 us
-#else
       delay_us(10);	// charge lines for 10 us
-#endif
 
       {
         // disable interrupts so we can switch all the pins as close to the same
         // time as possible
-        noInterrupts();
+        __disable_irq();
 
         // record start time before the first sensor is switched to input
         // (similarly, time is checked before the first sensor is read in the
@@ -671,32 +591,28 @@ void QTRSensors::readPrivate(uint16_t * sensorValues, uint8_t start, uint8_t ste
         for (uint8_t i = start; i < _sensorCount; i += step)
         {
           // make sensor line an input (should also ensure pull-up is disabled)
-#if defined ARDUINO
-        	pinMode(_sensorPins[i], INPUT);
-#else
         	setGpioInputMode(_sensorPorts[i],_sensorPins[i]);
-#endif
         }
 
-        interrupts(); // re-enable
+        __enable_irq(); // re-enable
 
         while (time < _maxValue)
         {
           // disable interrupts so we can read all the pins as close to the same
           // time as possible
-          noInterrupts();
+        	__disable_irq();
 
           time = micros() - startTime;
           for (uint8_t i = start; i < _sensorCount; i += step)
           {
-            if ((digitalRead(_sensorPins[i]) == LOW) && (time < sensorValues[i]))
+            if ((getGpio(_sensorPorts[i], _sensorPins[i]) == LOW) && (time < sensorValues[i]))
             {
               // record the first time the line reads low
               sensorValues[i] = time;
             }
           }
 
-          interrupts(); // re-enable
+          __enable_irq(); // re-enable
         }
       }
       return;
