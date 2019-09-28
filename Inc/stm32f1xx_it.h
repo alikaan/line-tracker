@@ -39,6 +39,7 @@
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 
+uint32_t microsecondCt = 0;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -58,7 +59,7 @@ void PendSV_Handler(void);
 void SysTick_Handler(void);
 void TIM2_IRQHandler(void);
 /* USER CODE BEGIN EFP */
-
+uint32_t micros(void);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

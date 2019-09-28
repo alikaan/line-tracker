@@ -9,7 +9,6 @@
 #define HW_LAYER_C_
 
 #include "main.h"
-#include "dwt_stm32_delay.h"
 
 
 static inline void setGpioOutputMode(void *port, uint32_t pin)
