@@ -4,6 +4,13 @@
 
 #include <stdint.h>
 
+extern "C"
+{
+	void set_qtr_typerc();
+	void set_qtr_sensor_pins(const uint8_t * pins, uint8_t sensorCount);
+	void set_qtr_sensor_ports(const void * ports, uint8_t sensorCount);
+}
+
 /// \brief Emitter behavior when taking readings.
 ///
 /// Note that emitter control will only work if you specify a valid emitter pin
@@ -130,6 +137,34 @@ class QTRSensors
     /// called (it sets `calibrationOn.initialized` and
     /// `calibrationOff.initialized` to false).
     void setSensorPins(const uint8_t * pins, uint8_t sensorCount);
+
+    /// \brief Sets the sensor ports.
+	///
+	/// \param[in] pins A pointer to an array containing the Arduino pins that
+	/// the sensors are connected to.
+	///
+	/// \param sensorCount The number of sensors, which should match the length
+	/// of the pins array.
+	///
+	/// Example usage:
+	/// ~~~{.cpp}
+	/// // Set pins for four RC sensors connected to pins 6, 7, A0, and A1.
+	/// // (Most analog pins can also be used as digital pins.)
+	/// qtr.setTypeRC();
+	/// qtr.setSensorPorts((const uint8_t[]){6, 7, A0, A1}, 4);
+	/// ~~~
+	/// ~~~{.cpp}
+	/// // Set pins for four analog sensors connected to pins A2, A3, A4, and A5.
+	/// qtr.setTypeAnalog();
+	/// qtr.setSensorPorts((const uint8_t[]){A2, A3, A4, A5}, 4);
+	/// ~~~
+	///
+	/// If \link CalibrationData calibration data \endlink has already been
+	/// stored, calling this method will force the storage for the calibration
+	/// values to be reallocated and reinitialized the next time calibrate() is
+	/// called (it sets `calibrationOn.initialized` and
+	/// `calibrationOff.initialized` to false).
+	void setSensorPorts(const void * ports, uint8_t sensorCount);
 
     /// \brief Sets the timeout for RC sensors.
     ///

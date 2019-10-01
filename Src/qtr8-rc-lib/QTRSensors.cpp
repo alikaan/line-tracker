@@ -4,6 +4,8 @@ extern "C"{
 #include "main.h"
 }
 
+QTRSensors qtr;
+
 void QTRSensors::setTypeRC()
 {
   _type = QTRType::RC;
@@ -22,13 +24,11 @@ void QTRSensors::setSensorPins(const uint8_t * pins, uint8_t sensorCount)
 
   // (Re)allocate and initialize the array if necessary.
   uint32_t * oldSensorPins = _sensorPins;
-  void * oldSensorPort = _sensorPort;
   _sensorPins = (uint8_t *)realloc(_sensorPins, sizeof(uint8_t) * sensorCount);
-  _sensorPorts = (uint8_t *)realloc(_sensorPorts, sizeof(uint8_t) * sensorCount);
   if (_sensorPins == nullptr)
   {
     // Memory allocation failed; don't continue.
-    free(oldSensorPins); // deallocate any memory used by old array
+    //free(oldSensorPins); // deallocate any memory used by old array
     return;
   }
 
@@ -43,6 +43,34 @@ void QTRSensors::setSensorPins(const uint8_t * pins, uint8_t sensorCount)
   // arrays might need to be reallocated if the sensor count was changed.
   calibrationOn.initialized = false;
   calibrationOff.initialized = false;
+}
+
+void QTRSensors::setSensorPorts(const void *ports, uint8_t sensorCount)
+{
+	if (sensorCount > QTRMaxSensors) { sensorCount = QTRMaxSensors; }
+
+	// (Re)allocate and initialize the array if necessary.
+	void * oldSensorPort = _sensorPorts;
+	_sensorPorts = (uint8_t *)realloc(_sensorPorts, sizeof(uint8_t) * sensorCount);
+	if (_sensorPorts == nullptr)
+	{
+		// Memory allocation failed; don't continue.
+		//free(oldSensorPins); // deallocate any memory used by old array
+		return;
+	}
+
+	for (uint8_t i = 0; i < sensorCount; i++)
+	{
+		_sensorPorts[i] = ports[i];
+	}
+
+	_sensorCount = sensorCount;
+
+	// Any previous calibration values are no longer valid, and the calibration
+	// arrays might need to be reallocated if the sensor count was changed.
+	calibrationOn.initialized = false;
+	calibrationOff.initialized = false;
+
 }
 
 void QTRSensors::setTimeout(uint16_t timeout)
@@ -346,7 +374,7 @@ void QTRSensors::calibrateOnOrOff(CalibrationData & calibration, QTRReadMode mod
     if (calibration.maximum == nullptr)
     {
       // Memory allocation failed; don't continue.
-      free(oldMaximum); // deallocate any memory used by old array
+      //free(oldMaximum); // deallocate any memory used by old array
       return;
     }
 
@@ -356,7 +384,7 @@ void QTRSensors::calibrateOnOrOff(CalibrationData & calibration, QTRReadMode mod
     if (calibration.minimum == nullptr)
     {
       // Memory allocation failed; don't continue.
-      free(oldMinimum); // deallocate any memory used by old array
+      //free(oldMinimum); // deallocate any memory used by old array
       return;
     }
 
@@ -703,3 +731,22 @@ QTRSensors::~QTRSensors()
   if (calibrationOn.minimum)  { free(calibrationOn.minimum); }
   if (calibrationOff.minimum) { free(calibrationOff.minimum); }
 }
+
+// Externed C Functions
+
+extern "C" void set_qtr_typerc()
+{
+	qtr.setTypeRC();
+}
+
+extern "C" void set_qtr_sensor_pins(const uint8_t * pins, uint8_t sensorCount)
+{
+	qtr.setSensorPins(pins, sensorCount);
+}
+
+extern "C" void set_qtr_sensor_ports(const void * ports, uint8_t sensorCount)
+{
+	qtr.setSensorPorts(ports, sensorCount);
+}
+
+
