@@ -105,6 +105,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   DWT_Delay_Init();
+  __enable_irq();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -117,8 +118,6 @@ int main(void)
 	  LL_GPIO_TogglePin(LED_GREEN_GPIO_Port,LED_GREEN_Pin);
 	  LL_mDelay(1000);
 	  DWT_Delay_us(10);
-	  __disable_irq();
-	  __enable_irq();
   }
   /* USER CODE END 3 */
 }
